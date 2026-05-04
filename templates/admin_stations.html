@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Администрирование станций{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Админ-панель</p>
+            <h1>Управление станциями</h1>
+        </div>
+    </div>
+</section>
+
+<section class="container form-section">
+    <div class="panel-card">
+        <h2>Добавление станции</h2>
+        <form method="post" class="modern-form">
+            <div class="field">
+                <label>Название станции</label>
+                <input type="text" name="station_name" required>
+            </div>
+
+            <div class="field">
+                <label>Город</label>
+                <input type="text" name="city" required>
+            </div>
+
+            <button type="submit" class="primary-button full-width">Добавить станцию</button>
+        </form>
+    </div>
+</section>
+
+<section class="container results-section">
+    <div class="results-header">
+        <h2>Список станций</h2>
+        <p>Здесь отображаются все станции, добавленные в систему.</p>
+    </div>
+
+    <div class="ticket-list">
+        {% for station in stations %}
+        <article class="ticket-card">
+            <div class="ticket-top">
+                <div>
+                    <p class="ticket-train">{{ station.city }}</p>
+                    <h3>{{ station.station_name }}</h3>
+                </div>
+            </div>
+
+            <form method="post" action="{{ url_for('delete_station', station_id=station.station_id) }}">
+                <button type="submit" class="primary-button full-width">Удалить станцию</button>
+            </form>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

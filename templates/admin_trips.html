@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Администрирование рейсов{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Админ-панель</p>
+            <h1>Управление рейсами</h1>
+        </div>
+    </div>
+</section>
+
+<section class="container form-section">
+    <div class="panel-card">
+        <h2>Добавление рейса</h2>
+        <form method="post" class="modern-form">
+            <div class="field">
+                <label>Маршрут</label>
+                <select name="route_id" required>
+                    {% for route in route_options %}
+                    <option value="{{ route.route_id }}">
+                        {{ route.train_number }} — {{ route.departure_city }} → {{ route.arrival_city }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Дата и время отправления</label>
+                <input type="datetime-local" name="departure_datetime" required>
+            </div>
+
+            <div class="field">
+                <label>Дата и время прибытия</label>
+                <input type="datetime-local" name="arrival_datetime" required>
+            </div>
+
+            <div class="field">
+                <label>Статус</label>
+                <select name="status" required>
+                    <option value="scheduled">scheduled</option>
+                    <option value="cancelled">cancelled</option>
+                    <option value="completed">completed</option>
+                </select>
+            </div>
+
+            <button type="submit" class="primary-button full-width">Добавить рейс</button>
+        </form>
+    </div>
+</section>
+
+<section class="container results-section">
+    <div class="results-header">
+        <h2>Список рейсов</h2>
+        <p>Здесь отображаются все рейсы, созданные на основе маршрутов.</p>
+    </div>
+
+    <div class="ticket-list">
+        {% for trip in trips %}
+        <article class="ticket-card">
+            <div class="ticket-top">
+                <div>
+                    <p class="ticket-train">{{ trip.train_number }}</p>
+                    <h3>{{ trip.departure_city }} → {{ trip.arrival_city }}</h3>
+                    <p>{{ trip.departure_datetime }} → {{ trip.arrival_datetime }}</p>
+                </div>
+                <span class="ticket-status">{{ trip.status }}</span>
+            </div>
+
+            <form method="post" action="{{ url_for('delete_trip', trip_id=trip.trip_id) }}">
+                <button type="submit" class="primary-button full-width">Удалить рейс</button>
+            </form>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Статистика{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Админ-панель</p>
+            <h1>Статистика системы</h1>
+        </div>
+    </div>
+</section>
+
+<section class="container results-section">
+    <div class="results-header">
+        <h2>Основные показатели</h2>
+        <p>Ключевые цифры по билетам и платежам.</p>
+    </div>
+
+    <div class="info-grid">
+        <article class="info-card">
+            <h3>Продано билетов</h3>
+            <p>{{ totals.total_tickets }}</p>
+        </article>
+
+        <article class="info-card">
+            <h3>Суммарный доход</h3>
+            <p>{{ totals.total_revenue }} ₽</p>
+        </article>
+    </div>
+</section>
+
+<section class="container results-section">
+    <div class="results-header">
+        <h2>Платежи по статусам</h2>
+        <p>Сколько платежей проведено и на какую сумму.</p>
+    </div>
+
+    <div class="ticket-list">
+        {% for row in payments_stats %}
+        <article class="ticket-card">
+            <div class="ticket-top">
+                <div>
+                    <p class="ticket-train">{{ row.payment_status }}</p>
+                    <h3>{{ row.payments_count }} платежей</h3>
+                </div>
+                <span class="ticket-status">{{ row.amount_sum }} ₽</span>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="container results-section">
+    <div class="results-header">
+        <h2>Популярные маршруты</h2>
+        <p>Топ направлений по количеству оформленных билетов.</p>
+    </div>
+
+    <div class="ticket-list">
+        {% for route in popular_routes %}
+        <article class="ticket-card">
+            <div class="ticket-top">
+                <div>
+                    <p class="ticket-train">{{ route.from_city }} → {{ route.to_city }}</p>
+                    <h3>{{ route.tickets_count }} билетов</h3>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

@@ -31,7 +31,16 @@
                 {% endif %}
 
                 {% if session.get('role') == 'admin' %}
-                    <a href="{{ url_for('admin') }}">Админ</a>
+                    <div class="nav-dropdown">
+                        <a href="{{ url_for('admin') }}" class="nav-dropdown-toggle">Админ</a>
+                        <div class="nav-dropdown-menu">
+                            <a href="{{ url_for('admin') }}">Поезда</a>
+                            <a href="{{ url_for('admin_stations') }}">Станции</a>
+                            <a href="{{ url_for('admin_routes') }}">Маршруты</a>
+                            <a href="{{ url_for('admin_trips') }}">Рейсы</a>
+                            <a href="{{ url_for('admin_stats') }}">Статистика</a>
+                        </div>
+                    </div>
                 {% endif %}
 
                 {% if session.get('user_id') %}

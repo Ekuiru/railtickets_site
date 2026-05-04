@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Администрирование{% endblock %}
+{% block title %}Администрирование поездов{% endblock %}
 {% block content %}
 
 <section class="hero hero-small">
@@ -27,7 +27,11 @@
 
             <div class="field">
                 <label>Тип поезда</label>
-                <input type="text" name="train_type" required>
+                <select name="train_type" required>
+                    <option value="Скорый">Скорый</option>
+                    <option value="Фирменный">Фирменный</option>
+                    <option value="Сапсан">Сапсан</option>
+                </select>
             </div>
 
             <button type="submit" class="primary-button full-width">Добавить поезд</button>
@@ -54,6 +58,10 @@
                 </div>
                 <span class="ticket-status">{{ train.train_type }}</span>
             </div>
+
+            <form method="post" action="{{ url_for('delete_train', train_id=train.train_id) }}">
+                <button type="submit" class="primary-button full-width">Удалить поезд</button>
+            </form>
         </article>
         {% endfor %}
     </div>

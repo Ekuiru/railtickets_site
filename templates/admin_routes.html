@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Администрирование маршрутов{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Админ-панель</p>
+            <h1>Управление маршрутами</h1>
+        </div>
+    </div>
+</section>
+
+<section class="container form-section">
+    <div class="panel-card">
+        <h2>Добавление маршрута</h2>
+        <form method="post" class="modern-form">
+            <div class="field">
+                <label>Поезд</label>
+                <select name="train_id" required>
+                    {% for train in trains %}
+                    <option value="{{ train.train_id }}">
+                        {{ train.train_number }} — {{ train.train_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Станция отправления</label>
+                <select name="departure_station_id" required>
+                    {% for station in stations %}
+                    <option value="{{ station.station_id }}">
+                        {{ station.city }} — {{ station.station_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Станция прибытия</label>
+                <select name="arrival_station_id" required>
+                    {% for station in stations %}
+                    <option value="{{ station.station_id }}">
+                        {{ station.city }} — {{ station.station_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Базовая цена</label>
+                <input type="number" step="0.01" min="0" name="base_price" required>
+            </div>
+
+            <div class="field">
+                <label>Время в пути (мин)</label>
+                <input type="number" min="1" name="travel_time_minutes" required>
+            </div>
+
+            <button type="submit" class="primary-button full-width">Добавить маршрут</button>
+        </form>
+    </div>
+</section>
+
+<section class="container results-section">
+    <div class="results-header">
+        <h2>Список маршрутов</h2>
+        <p>Маршруты связывают поезд, станции отправления и прибытия, цену и время в пути.</p>
+    </div>
+
+    <div class="ticket-list">
+        {% for route in routes %}
+        <article class="ticket-card">
+            <div class="ticket-top">
+                <div>
+                    <p class="ticket-train">{{ route.train_number }} — {{ route.train_name }}</p>
+                    <h3>{{ route.departure_city }} ({{ route.departure_station }}) → {{ route.arrival_city }} ({{ route.arrival_station }})</h3>
+                </div>
+                <span class="ticket-status">{{ route.base_price }} ₽ / {{ route.travel_time_minutes }} мин</span>
+            </div>
+
+            <form method="post" action="{{ url_for('delete_route', route_id=route.route_id) }}">
+                <button type="submit" class="primary-button full-width">Удалить маршрут</button>
+            </form>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

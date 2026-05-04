@@ -22,6 +22,18 @@ def create_app():
             return view(*args, **kwargs)
         return wrapped
 
+    def admin_required(view):
+        @wraps(view)
+        def wrapped(*args, **kwargs):
+            if 'user_id' not in session:
+                flash('Сначала выполните вход в систему.')
+                return redirect(url_for('login'))
+            if session.get('role') != 'admin':
+                flash('Доступ разрешён только администратору.')
+                return redirect(url_for('index'))
+            return view(*args, **kwargs)
+        return wrapped
+
     @app.route('/')
     def index():
         return render_template('index.html')
@@ -134,9 +146,9 @@ def create_app():
                     JOIN stations s1 ON r.departure_station_id = s1.station_id
                     JOIN stations s2 ON r.arrival_station_id = s2.station_id
                     WHERE LOWER(s1.city) = LOWER(%s)
-                    AND LOWER(s2.city) = LOWER(%s)
-                    AND DATE(t.departure_datetime) = %s
-                    AND t.status = 'scheduled'
+                      AND LOWER(s2.city) = LOWER(%s)
+                      AND DATE(t.departure_datetime) = %s
+                      AND t.status = 'scheduled'
                     ORDER BY t.departure_datetime
                     ''',
                     (departure_station, arrival_station, date)
@@ -160,10 +172,27 @@ def create_app():
         conn = get_connection()
         cur = conn.cursor()
         try:
+            cur.execute(
+                '''
+                SELECT
+                    t.trip_id,
+                    r.base_price
+                FROM trips t
+                JOIN routes r ON t.route_id = r.route_id
+                WHERE t.trip_id = %s
+                ''',
+                (trip_id,)
+            )
+            trip = cur.fetchone()
+
+            if not trip:
+                flash('Рейс не найден.')
+                return redirect(url_for('search_trips'))
+
             if request.method == 'POST':
                 seat_id = int(request.form['seat_id'])
                 passenger_name = request.form['passenger_name'].strip()
-                price = request.form['price']
+                price = trip['base_price']
 
                 if not passenger_name:
                     flash('Введите ФИО пассажира.')
@@ -215,7 +244,12 @@ def create_app():
             cur.close()
             conn.close()
 
-        return render_template('booking.html', seats=seats, trip_id=trip_id)
+        return render_template(
+            'booking.html',
+            seats=seats,
+            trip_id=trip_id,
+            price=trip['base_price']
+        )
 
     @app.route('/my_tickets')
     @login_required
@@ -317,12 +351,8 @@ def create_app():
         return response
 
     @app.route('/admin', methods=['GET', 'POST'])
-    @login_required
+    @admin_required
     def admin():
-        if session.get('role') != 'admin':
-            flash('Доступ разрешён только администратору.')
-            return redirect(url_for('index'))
-
         conn = get_connection()
         cur = conn.cursor()
         try:
@@ -352,13 +382,310 @@ def create_app():
 
         return render_template('admin.html', trains=trains)
 
-    @app.route('/export_trains')
-    @login_required
-    def export_trains():
-        if session.get('role') != 'admin':
-            flash('Доступ разрешён только администратору.')
-            return redirect(url_for('index'))
+    @app.route('/admin/trains/delete/<int:train_id>', methods=['POST'])
+    @admin_required
+    def delete_train(train_id):
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute('DELETE FROM trains WHERE train_id = %s', (train_id,))
+            conn.commit()
+            flash('Поезд удалён.')
+        except Exception:
+            conn.rollback()
+            flash('Не удалось удалить поезд. Возможно, он используется в маршрутах или вагонах.')
+        finally:
+            cur.close()
+            conn.close()
 
+        return redirect(url_for('admin'))
+
+    @app.route('/admin/stations', methods=['GET', 'POST'])
+    @admin_required
+    def admin_stations():
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            if request.method == 'POST':
+                station_name = request.form['station_name'].strip()
+                city = request.form['city'].strip()
+
+                if not station_name or not city:
+                    flash('Все поля формы добавления станции обязательны.')
+                else:
+                    cur.execute(
+                        '''
+                        INSERT INTO stations (station_name, city)
+                        VALUES (%s, %s)
+                        ''',
+                        (station_name, city)
+                    )
+                    conn.commit()
+                    flash('Станция успешно добавлена.')
+
+            cur.execute('SELECT * FROM stations ORDER BY city, station_name')
+            stations = cur.fetchall()
+        finally:
+            cur.close()
+            conn.close()
+
+        return render_template('admin_stations.html', stations=stations)
+
+    @app.route('/admin/stations/delete/<int:station_id>', methods=['POST'])
+    @admin_required
+    def delete_station(station_id):
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute('DELETE FROM stations WHERE station_id = %s', (station_id,))
+            conn.commit()
+            flash('Станция удалена.')
+        except Exception:
+            conn.rollback()
+            flash('Не удалось удалить станцию. Возможно, она используется в маршрутах.')
+        finally:
+            cur.close()
+            conn.close()
+
+        return redirect(url_for('admin_stations'))
+
+    @app.route('/admin/routes', methods=['GET', 'POST'])
+    @admin_required
+    def admin_routes():
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            if request.method == 'POST':
+                train_id = request.form['train_id']
+                departure_station_id = request.form['departure_station_id']
+                arrival_station_id = request.form['arrival_station_id']
+                base_price = request.form['base_price']
+                travel_time_minutes = request.form['travel_time_minutes']
+
+                if departure_station_id == arrival_station_id:
+                    flash('Станция отправления и прибытия не должны совпадать.')
+                else:
+                    cur.execute(
+                        '''
+                        INSERT INTO routes (
+                            train_id,
+                            departure_station_id,
+                            arrival_station_id,
+                            base_price,
+                            travel_time_minutes
+                        )
+                        VALUES (%s, %s, %s, %s, %s)
+                        ''',
+                        (train_id, departure_station_id, arrival_station_id, base_price, travel_time_minutes)
+                    )
+                    conn.commit()
+                    flash('Маршрут успешно добавлен.')
+
+            cur.execute('SELECT train_id, train_number, train_name FROM trains ORDER BY train_number')
+            trains = cur.fetchall()
+
+            cur.execute('SELECT station_id, station_name, city FROM stations ORDER BY city, station_name')
+            stations = cur.fetchall()
+
+            cur.execute(
+                '''
+                SELECT
+                    r.route_id,
+                    tr.train_number,
+                    tr.train_name,
+                    s1.city AS departure_city,
+                    s1.station_name AS departure_station,
+                    s2.city AS arrival_city,
+                    s2.station_name AS arrival_station,
+                    r.base_price,
+                    r.travel_time_minutes
+                FROM routes r
+                JOIN trains tr ON r.train_id = tr.train_id
+                JOIN stations s1 ON r.departure_station_id = s1.station_id
+                JOIN stations s2 ON r.arrival_station_id = s2.station_id
+                ORDER BY r.route_id DESC
+                '''
+            )
+            routes = cur.fetchall()
+        finally:
+            cur.close()
+            conn.close()
+
+        return render_template(
+            'admin_routes.html',
+            routes=routes,
+            trains=trains,
+            stations=stations
+        )
+
+    @app.route('/admin/routes/delete/<int:route_id>', methods=['POST'])
+    @admin_required
+    def delete_route(route_id):
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute('DELETE FROM routes WHERE route_id = %s', (route_id,))
+            conn.commit()
+            flash('Маршрут удалён.')
+        except Exception:
+            conn.rollback()
+            flash('Не удалось удалить маршрут. Возможно, он используется в рейсах.')
+        finally:
+            cur.close()
+            conn.close()
+
+        return redirect(url_for('admin_routes'))
+
+    @app.route('/admin/trips', methods=['GET', 'POST'])
+    @admin_required
+    def admin_trips():
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            if request.method == 'POST':
+                route_id = request.form['route_id']
+                departure_datetime = request.form['departure_datetime']
+                arrival_datetime = request.form['arrival_datetime']
+                status = request.form['status']
+
+                cur.execute(
+                    '''
+                    INSERT INTO trips (
+                        route_id,
+                        departure_datetime,
+                        arrival_datetime,
+                        status
+                    )
+                    VALUES (%s, %s, %s, %s)
+                    ''',
+                    (route_id, departure_datetime, arrival_datetime, status)
+                )
+                conn.commit()
+                flash('Рейс успешно добавлен.')
+
+            cur.execute(
+                '''
+                SELECT
+                    r.route_id,
+                    tr.train_number,
+                    s1.city AS departure_city,
+                    s2.city AS arrival_city
+                FROM routes r
+                JOIN trains tr ON r.train_id = tr.train_id
+                JOIN stations s1 ON r.departure_station_id = s1.station_id
+                JOIN stations s2 ON r.arrival_station_id = s2.station_id
+                ORDER BY tr.train_number, s1.city, s2.city
+                '''
+            )
+            route_options = cur.fetchall()
+
+            cur.execute(
+                '''
+                SELECT
+                    t.trip_id,
+                    tr.train_number,
+                    s1.city AS departure_city,
+                    s2.city AS arrival_city,
+                    t.departure_datetime,
+                    t.arrival_datetime,
+                    t.status
+                FROM trips t
+                JOIN routes r ON t.route_id = r.route_id
+                JOIN trains tr ON r.train_id = tr.train_id
+                JOIN stations s1 ON r.departure_station_id = s1.station_id
+                JOIN stations s2 ON r.arrival_station_id = s2.station_id
+                ORDER BY t.departure_datetime DESC
+                '''
+            )
+            trips = cur.fetchall()
+        finally:
+            cur.close()
+            conn.close()
+
+        return render_template(
+            'admin_trips.html',
+            trips=trips,
+            route_options=route_options
+        )
+
+    @app.route('/admin/trips/delete/<int:trip_id>', methods=['POST'])
+    @admin_required
+    def delete_trip(trip_id):
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute('DELETE FROM trips WHERE trip_id = %s', (trip_id,))
+            conn.commit()
+            flash('Рейс удалён.')
+        except Exception:
+            conn.rollback()
+            flash('Не удалось удалить рейс. Возможно, по нему уже оформлены билеты.')
+        finally:
+            cur.close()
+            conn.close()
+
+        return redirect(url_for('admin_trips'))
+
+    @app.route('/admin_stats')
+    @admin_required
+    def admin_stats():
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                '''
+                SELECT
+                    COUNT(*) AS total_tickets,
+                    COALESCE(SUM(price), 0) AS total_revenue
+                FROM tickets
+                '''
+            )
+            totals = cur.fetchone()
+
+            cur.execute(
+                '''
+                SELECT
+                    payment_status,
+                    COUNT(*) AS payments_count,
+                    COALESCE(SUM(amount), 0) AS amount_sum
+                FROM payments
+                GROUP BY payment_status
+                ORDER BY payment_status
+                '''
+            )
+            payments_stats = cur.fetchall()
+
+            cur.execute(
+                '''
+                SELECT
+                    s1.city AS from_city,
+                    s2.city AS to_city,
+                    COUNT(*) AS tickets_count
+                FROM tickets tk
+                JOIN trips t ON tk.trip_id = t.trip_id
+                JOIN routes r ON t.route_id = r.route_id
+                JOIN stations s1 ON r.departure_station_id = s1.station_id
+                JOIN stations s2 ON r.arrival_station_id = s2.station_id
+                GROUP BY s1.city, s2.city
+                ORDER BY tickets_count DESC, from_city, to_city
+                LIMIT 5
+                '''
+            )
+            popular_routes = cur.fetchall()
+        finally:
+            cur.close()
+            conn.close()
+
+        return render_template(
+            'admin_stats.html',
+            totals=totals,
+            payments_stats=payments_stats,
+            popular_routes=popular_routes
+        )
+
+    @app.route('/export_trains')
+    @admin_required
+    def export_trains():
         conn = get_connection()
         cur = conn.cursor()
         try:
