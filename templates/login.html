@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Вход{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Авторизация</p>
+            <h1>Вход в систему</h1>
+        </div>
+    </div>
+</section>
+
+<section class="container form-section">
+    <div class="panel-card auth-card">
+        <h2>Войти в аккаунт</h2>
+        <form method="post" class="modern-form">
+            <div class="field">
+                <label>Email</label>
+                <input type="email" name="email" required>
+            </div>
+
+            <div class="field">
+                <label>Пароль</label>
+                <input type="password" name="password" required>
+            </div>
+
+            <button type="submit" class="primary-button full-width">Войти</button>
+        </form>
+    </div>
+</section>
+
+{% endblock %}

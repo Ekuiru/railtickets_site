@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+
+<section class="hero">
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <p class="hero-label">Онлайн-покупка железнодорожных билетов</p>
+            <h1>Найдите удобный поезд и купите билет за пару минут</h1>
+            <p class="hero-description">
+                Поиск рейсов, выбор мест, оформление заказа и просмотр купленных билетов
+                в одном веб-приложении.
+            </p>
+        </div>
+
+        <div class="search-card">
+            <h2>Поиск билетов</h2>
+            <form action="{{ url_for('search_trips') }}" method="post" class="search-grid">
+                <div class="field">
+                    <label for="departure_station">Откуда</label>
+                    <input id="departure_station" type="text" name="departure_station" placeholder="Москва" required>
+                </div>
+
+                <div class="field">
+                    <label for="arrival_station">Куда</label>
+                    <input id="arrival_station" type="text" name="arrival_station" placeholder="Санкт-Петербург" required>
+                </div>
+
+                <div class="field">
+                    <label for="date">Дата</label>
+                    <input id="date" type="date" name="date" required>
+                </div>
+
+                <button type="submit" class="primary-button search-button">Найти билеты</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section class="container features-section">
+    <div class="info-grid">
+        <article class="info-card">
+            <h3>Быстрый поиск</h3>
+            <p>Введите станции и дату, чтобы получить список доступных рейсов.</p>
+        </article>
+
+        <article class="info-card">
+            <h3>Выбор мест</h3>
+            <p>Система показывает свободные места по рейсу на основе данных PostgreSQL.</p>
+        </article>
+
+        <article class="info-card">
+            <h3>Личный кабинет</h3>
+            <p>После входа пользователь может просматривать купленные билеты и оформлять новые.</p>
+        </article>
+    </div>
+</section>
+
+{% endblock %}

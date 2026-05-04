@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Railway Tickets{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container topbar">
+            <a href="{{ url_for('index') }}" class="logo">
+                <span class="logo-badge">🚄</span>
+                <span class="logo-text">RailTickets</span>
+            </a>
+
+            <nav class="main-nav">
+                <a href="{{ url_for('index') }}">Главная</a>
+                <a href="{{ url_for('search_trips') }}">Поиск</a>
+
+                {% if session.get('user_id') %}
+                    <a href="{{ url_for('my_tickets') }}">Мои билеты</a>
+                {% endif %}
+
+                {% if session.get('role') == 'admin' %}
+                    <a href="{{ url_for('admin') }}">Админ</a>
+                {% endif %}
+
+                {% if session.get('user_id') %}
+                    <a href="{{ url_for('logout') }}" class="nav-button ghost">Выход</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-button ghost">Вход</a>
+                    <a href="{{ url_for('register') }}" class="nav-button">Регистрация</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <section class="container flash-wrapper">
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                </section>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

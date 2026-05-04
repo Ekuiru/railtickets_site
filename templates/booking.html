@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Оформление билета{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Оформление поездки</p>
+            <h1>Билет на рейс №{{ trip_id }}</h1>
+        </div>
+    </div>
+</section>
+
+<section class="container form-section">
+    <div class="panel-card booking-panel">
+        <h2>Данные пассажира</h2>
+
+        <form method="post" class="modern-form">
+            <div class="field">
+                <label>ФИО пассажира</label>
+                <input type="text" name="passenger_name" required>
+            </div>
+
+            <div class="field">
+                <label>Выбор места</label>
+                <select name="seat_id" required>
+                    {% for seat in seats %}
+                    <option value="{{ seat.seat_id }}">
+                        Вагон {{ seat.carriage_number }}, место {{ seat.seat_number }}, класс {{ seat.seat_class }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Стоимость</label>
+                <input type="number" step="0.01" name="price" value="3500.00" required>
+            </div>
+
+            <button type="submit" class="primary-button full-width">Подтвердить покупку</button>
+        </form>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Поиск рейсов{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Поиск железнодорожных рейсов</p>
+            <h1>Подберите подходящий рейс</h1>
+        </div>
+
+        <div class="search-card search-card-inline">
+            <form method="post" class="search-grid">
+                <div class="field">
+                    <label>Откуда</label>
+                    <input
+                        type="text"
+                        name="departure_station"
+                        placeholder="Москва"
+                        value="{{ departure_station }}"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label>Куда</label>
+                    <input
+                        type="text"
+                        name="arrival_station"
+                        placeholder="Санкт-Петербург"
+                        value="{{ arrival_station }}"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label>Дата</label>
+                    <input
+                        type="date"
+                        name="date"
+                        value="{{ date }}"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="primary-button search-button">Найти</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section class="container results-section">
+    {% if trips %}
+        <div class="results-header">
+            <h2>Найденные рейсы</h2>
+            <p>Выберите подходящий поезд и перейдите к покупке билета.</p>
+        </div>
+
+        <div class="trip-list">
+            {% for trip in trips %}
+            <article class="trip-card">
+                <div class="trip-main">
+                    <div class="trip-time">
+                        <span class="time-big">
+                            {% if trip.departure_datetime.strftime %}
+                                {{ trip.departure_datetime.strftime('%H:%M') }}
+                            {% else %}
+                                {{ trip.departure_datetime }}
+                            {% endif %}
+                        </span>
+                        <span class="time-city">{{ trip.departure_station }}</span>
+                    </div>
+
+                    <div class="trip-route">
+                        <div class="route-line">
+                            <span class="dot"></span>
+                            <span class="line"></span>
+                            <span class="train-badge">{{ trip.train_number }}</span>
+                        </div>
+                        <p>{{ trip.train_name }}</p>
+                    </div>
+
+                    <div class="trip-time">
+                        <span class="time-big">
+                            {% if trip.arrival_datetime.strftime %}
+                                {{ trip.arrival_datetime.strftime('%H:%M') }}
+                            {% else %}
+                                {{ trip.arrival_datetime }}
+                            {% endif %}
+                        </span>
+                        <span class="time-city">{{ trip.arrival_station }}</span>
+                    </div>
+                </div>
+
+                <div class="trip-side">
+                    <div class="price-block">
+                        <span class="price-label">Цена от</span>
+                        <span class="price-value">{{ trip.base_price }} ₽</span>
+                    </div>
+
+                    <a class="primary-button trip-button" href="{{ url_for('book_ticket', trip_id=trip.trip_id) }}">
+                        Купить билет
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+    {% elif departure_station or arrival_station or date %}
+        <div class="empty-state">
+            <h2>Рейсы не найдены</h2>
+            <p>Попробуйте изменить города отправления, прибытия или дату поездки.</p>
+        </div>
+
+    {% else %}
+        <div class="empty-state">
+            <h2>Рейсы пока не найдены</h2>
+            <p>Укажите города и дату поездки, затем нажмите кнопку поиска.</p>
+        </div>
+    {% endif %}
+</section>
+
+{% endblock %}

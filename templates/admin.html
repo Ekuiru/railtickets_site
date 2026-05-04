@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Администрирование{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Админ-панель</p>
+            <h1>Управление поездами</h1>
+        </div>
+    </div>
+</section>
+
+<section class="container form-section">
+    <div class="panel-card">
+        <h2>Добавление поезда</h2>
+        <form method="post" class="modern-form">
+            <div class="field">
+                <label>Номер поезда</label>
+                <input type="text" name="train_number" required>
+            </div>
+
+            <div class="field">
+                <label>Название поезда</label>
+                <input type="text" name="train_name" required>
+            </div>
+
+            <div class="field">
+                <label>Тип поезда</label>
+                <input type="text" name="train_type" required>
+            </div>
+
+            <button type="submit" class="primary-button full-width">Добавить поезд</button>
+        </form>
+    </div>
+</section>
+
+<section class="container results-section">
+    <div class="results-header results-header-row">
+        <div>
+            <h2>Список поездов</h2>
+            <p>Здесь отображаются все поезда, добавленные в систему.</p>
+        </div>
+        <a class="primary-button" href="{{ url_for('export_trains') }}">Выгрузить CSV</a>
+    </div>
+
+    <div class="ticket-list">
+        {% for train in trains %}
+        <article class="ticket-card">
+            <div class="ticket-top">
+                <div>
+                    <p class="ticket-train">{{ train.train_number }}</p>
+                    <h3>{{ train.train_name }}</h3>
+                </div>
+                <span class="ticket-status">{{ train.train_type }}</span>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

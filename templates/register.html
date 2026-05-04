@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Регистрация</p>
+            <h1>Создание аккаунта</h1>
+        </div>
+    </div>
+</section>
+
+<section class="container form-section">
+    <div class="panel-card auth-card">
+        <h2>Зарегистрироваться</h2>
+        <form method="post" class="modern-form">
+            <div class="field">
+                <label>ФИО</label>
+                <input type="text" name="full_name" required>
+            </div>
+
+            <div class="field">
+                <label>Email</label>
+                <input type="email" name="email" required>
+            </div>
+
+            <div class="field">
+                <label>Пароль</label>
+                <input type="password" name="password" required>
+            </div>
+
+            <button type="submit" class="primary-button full-width">Создать аккаунт</button>
+        </form>
+    </div>
+</section>
+
+{% endblock %}

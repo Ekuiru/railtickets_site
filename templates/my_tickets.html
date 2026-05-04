@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Мои билеты{% endblock %}
+{% block content %}
+
+<section class="hero hero-small">
+    <div class="container">
+        <div class="hero-text compact">
+            <p class="hero-label">Личный кабинет</p>
+            <h1>Мои билеты</h1>
+        </div>
+    </div>
+</section>
+
+<section class="container results-section">
+    <div class="results-header results-header-row">
+        <div>
+            <h2>Мои билеты</h2>
+            <p>На этой странице отображаются оформленные билеты пользователя.</p>
+        </div>
+        <a class="primary-button" href="{{ url_for('export_my_tickets') }}">Выгрузить CSV</a>
+    </div>
+
+    {% if tickets %}
+        <div class="ticket-list">
+            {% for ticket in tickets %}
+            <article class="ticket-card">
+                <div class="ticket-top">
+                    <div>
+                        <p class="ticket-train">{{ ticket.train_number }}</p>
+                        <h3>{{ ticket.departure_station }} — {{ ticket.arrival_station }}</h3>
+                    </div>
+                    <span class="ticket-status">{{ ticket.ticket_status }}</span>
+                </div>
+
+                <div class="ticket-meta">
+                    <div>
+                        <span class="meta-label">Пассажир</span>
+                        <strong>{{ ticket.passenger_name }}</strong>
+                    </div>
+                    <div>
+                        <span class="meta-label">Отправление</span>
+                        <strong>{{ ticket.departure_datetime }}</strong>
+                    </div>
+                    <div>
+                        <span class="meta-label">Стоимость</span>
+                        <strong>{{ ticket.price }} ₽</strong>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h2>У вас пока нет билетов</h2>
+            <p>После покупки билеты будут отображаться на этой странице.</p>
+        </div>
+    {% endif %}
+</section>
+
+{% endblock %}
