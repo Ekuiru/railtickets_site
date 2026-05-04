@@ -1,0 +1,24 @@
+@startuml
+skinparam componentStyle rectangle
+
+node "Клиентское устройство\n(браузер пользователя)" as Client {
+  artifact "Веб-интерфейс\n(HTML/CSS/JS)" as WebUI
+}
+
+node "Сервер приложения" as AppServer {
+  component "Flask-приложение" as FlaskApp
+  component "Jinja2-шаблоны" as Templates
+  component "Модуль экспорта\nCSV" as CSVExport
+}
+
+node "Сервер базы данных" as DBServer {
+  database "PostgreSQL\n(структура БД проекта)" as DB
+}
+
+Client --> AppServer : HTTP/HTTPS\nзапросы к маршрутам Flask
+AppServer --> DBServer : TCP/IP, SQL‑запросы\n(SELECT/INSERT/UPDATE)
+
+FlaskApp --> Templates
+FlaskApp --> CSVExport
+FlaskApp --> DB
+@enduml

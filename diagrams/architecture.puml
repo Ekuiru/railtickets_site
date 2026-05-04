@@ -1,0 +1,44 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam wrapWidth 200
+skinparam maxMessageSize 80
+
+title Схема архитектуры веб‑приложения на Flask
+
+node "Клиентское устройство\n(браузер пользователя)" as Client {
+  artifact "HTML/CSS/JS\n(страницы: главная,\nпоиск, покупка, кабинет,\nадминка)" as WebUI
+}
+
+node "Сервер приложения\n(Flask)" as AppServer {
+  component "Маршруты Flask\n(view‑функции)" as FlaskRoutes
+  component "Модуль аутентификации\nи авторизации" as AuthModule
+  component "Модуль поиска рейсов" as TripSearch
+  component "Модуль покупки билетов" as Booking
+  component "Модуль экспорта\nотчётов (CSV)" as ExportCSV
+  component "Jinja2‑шаблоны\n(HTML-представление)" as Templates
+}
+
+node "Сервер базы данных\nPostgreSQL" as DBServer {
+  database "База данных проекта\n(users, trains, routes,\ntrips, seats, tickets,\npayments и др.)" as DB
+}
+
+' Взаимодействие клиент ↔ Flask
+Client --> FlaskRoutes : HTTP/HTTPS\nзапросы (GET/POST)
+FlaskRoutes --> Templates : Передача данных\nдля отрисовки HTML
+
+' Взаимодействие модулей внутри Flask
+FlaskRoutes --> AuthModule : Логин/регистрация\nпроверка ролей
+FlaskRoutes --> TripSearch : Поиск рейсов
+FlaskRoutes --> Booking   : Оформление билета
+FlaskRoutes --> ExportCSV : Формирование CSV
+
+' Работа с БД
+AuthModule --> DB : Запросы к таблице users
+TripSearch --> DB : Запросы к routes/trips/trains\nи представлениям мест
+Booking --> DB    : Запросы к orders/tickets/payments
+ExportCSV --> DB  : Запросы для отчётов
+
+' Связь сервера с БД
+AppServer --> DBServer : TCP/IP, SQL‑запросы
+
+@enduml

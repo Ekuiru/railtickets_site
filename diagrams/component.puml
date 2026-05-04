@@ -1,0 +1,88 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam wrapWidth 200
+skinparam maxMessageSize 80
+
+package "Клиентский уровень" {
+  [Главная страница] as UI_Index
+  [Регистрация] as UI_Register
+  [Авторизация] as UI_Login
+  [Поиск рейсов] as UI_Search
+  [Покупка билета] as UI_Booking
+  [Мои билеты] as UI_MyTickets
+  [Админ-панель] as UI_Admin
+}
+
+package "Серверное приложение (Flask)" {
+  [Маршруты Flask] as FlaskRoutes
+  [Модуль аутентификации\nи ролей] as AuthModule
+  [Модуль поиска рейсов] as TripSearchModule
+  [Модуль покупки билета] as BookingModule
+  [Модуль экспорта CSV\n(отчёты)] as ExportModule
+  [Административный модуль\n(поезда, станции, маршруты, рейсы)] as AdminModule
+}
+
+package "База данных PostgreSQL" {
+  [users]
+  [stations]
+  [trains]
+  [routes]
+  [trips]
+  [carriages]
+  [seats]
+  [orders]
+  [tickets]
+  [payments]
+  [available_seats_view]
+}
+
+package "Тестирование" {
+  [test_pages.py]
+  [test_access.py]
+  [test_auth_logic.py]
+}
+
+' Связь UI с Flask
+UI_Index --> FlaskRoutes
+UI_Register --> AuthModule
+UI_Login --> AuthModule
+UI_Search --> TripSearchModule
+UI_Booking --> BookingModule
+UI_MyTickets --> FlaskRoutes
+UI_Admin --> AdminModule
+
+FlaskRoutes --> AuthModule
+FlaskRoutes --> TripSearchModule
+FlaskRoutes --> BookingModule
+FlaskRoutes --> ExportModule
+FlaskRoutes --> AdminModule
+
+' Связь модулей с БД
+AuthModule --> users
+TripSearchModule --> trips
+TripSearchModule --> routes
+TripSearchModule --> trains
+TripSearchModule --> available_seats_view
+
+BookingModule --> orders
+BookingModule --> tickets
+BookingModule --> payments
+BookingModule --> seats
+BookingModule --> trips
+
+AdminModule --> trains
+AdminModule --> stations
+AdminModule --> routes
+AdminModule --> trips
+AdminModule --> carriages
+AdminModule --> seats
+
+ExportModule --> tickets
+ExportModule --> orders
+ExportModule --> trains
+
+' Тесты
+test_pages.py --> FlaskRoutes
+test_access.py --> FlaskRoutes
+test_auth_logic.py --> AuthModule
+@enduml

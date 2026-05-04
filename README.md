@@ -7,8 +7,8 @@
 - unittest для тестирования
 
 ## Запуск проекта
-1. Создайте базу данных PostgreSQL, например `train_tickets`.
-2. Подключитесь к PostgreSQL через `psql`, `pgAdmin` или любой другой клиент.
+1. Создайте базу данных PostgreSQL `train_tickets`.
+2. Подключитесь к PostgreSQL через `psql`.
 3. Последовательно выполните SQL-скрипты:
    - `database/schema.sql`
    - `database/views.sql`
@@ -32,13 +32,5 @@
 
 ## Запуск тестов
 ```bash
-python -m unittest discover -s tests
+python -m unittest discover -s tests -p "test*.py" -v
 ```
-
-## Что можно показать на защите
-- создание таблиц, представления, функций и триггеров в PostgreSQL;
-- заполнение таблиц тестовыми данными;
-- поиск рейсов в веб-приложении;
-- оформление билета;
-- список купленных билетов;
-- запуск unit-тестов.

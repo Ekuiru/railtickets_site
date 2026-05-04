@@ -1,0 +1,130 @@
+@startuml
+hide circle
+skinparam linetype ortho
+title ER-диаграмма базы данных\nвеб-приложения покупки ЖД билетов
+
+entity "users" as users {
+    * user_id : int <<PK>>
+    --
+    * full_name : varchar
+    * email : varchar
+    * password_hash : text
+    * role : varchar   -- user/admin
+}
+
+entity "stations" as stations {
+    * station_id : int <<PK>>
+    --
+    * station_name : varchar
+    * city : varchar
+}
+
+entity "trains" as trains {
+    * train_id : int <<PK>>
+    --
+    * train_number : varchar
+    * train_name : varchar
+    * train_type : varchar
+}
+
+entity "routes" as routes {
+    * route_id : int <<PK>>
+    --
+    * train_id : int <<FK>>
+    * departure_station_id : int <<FK>>
+    * arrival_station_id : int <<FK>>
+    * departure_time : time
+    * arrival_time : time
+    * base_price : numeric
+}
+
+entity "trips" as trips {
+    * trip_id : int <<PK>>
+    --
+    * route_id : int <<FK>>
+    * departure_datetime : timestamp
+    * arrival_datetime : timestamp
+    * status : varchar
+}
+
+entity "carriages" as carriages {
+    * carriage_id : int <<PK>>
+    --
+    * train_id : int <<FK>>
+    * carriage_number : int
+    * carriage_type : varchar
+    * seat_count : int
+}
+
+entity "seats" as seats {
+    * seat_id : int <<PK>>
+    --
+    * carriage_id : int <<FK>>
+    * seat_number : int
+    * seat_class : varchar
+}
+
+entity "orders" as orders {
+    * order_id : int <<PK>>
+    --
+    * user_id : int <<FK>>
+    * order_date : timestamp
+    * total_amount : numeric
+    * status : varchar
+}
+
+entity "tickets" as tickets {
+    * ticket_id : int <<PK>>
+    --
+    * order_id : int <<FK>>
+    * trip_id : int <<FK>>
+    * seat_id : int <<FK>>
+    * passenger_name : varchar
+    * price : numeric
+    * ticket_status : varchar
+}
+
+entity "payments" as payments {
+    * payment_id : int <<PK>>
+    --
+    * order_id : int <<FK>>
+    * amount : numeric
+    * payment_method : varchar
+    * payment_status : varchar
+    * payment_date : timestamp
+}
+
+' --------- СВЯЗИ ---------
+
+' Пользователь 1 --- 0..* Заказ
+users ||--o{ orders : оформляет >
+
+' Заказ 1 --- 1..* Билет
+orders ||--o{ tickets : содержит >
+
+' Заказ 1 --- 0..* Платёж
+orders ||--o{ payments : оплачивается >
+
+' Рейс 1 --- 0..* Билет
+trips ||--o{ tickets : используется >
+
+' Место 1 --- 0..* Билет
+seats ||--o{ tickets : занимает >
+
+' Поезд 1 --- 0..* Маршрут
+trains ||--o{ routes : обслуживает >
+
+' Станция 1 --- 0..* Маршрут
+stations ||--o{ routes : отправление
+stations ||--o{ routes : прибытие
+
+' Маршрут 1 --- 0..* Рейс
+routes ||--o{ trips : создаёт >
+
+' Поезд 1 --- 0..* Вагон
+trains ||--o{ carriages : состоит из >
+
+' Вагон 1 --- 0..* Место
+carriages ||--o{ seats : содержит >
+
+@enduml

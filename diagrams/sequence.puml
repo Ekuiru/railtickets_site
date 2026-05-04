@@ -1,0 +1,37 @@
+@startuml
+actor "Пользователь" as User
+participant "Браузер\n(веб-интерфейс)" as UI
+participant "Flask-приложение" as App
+database "PostgreSQL" as DB
+
+== Поиск рейса ==
+User -> UI : Ввод станций и даты
+UI -> App : GET /search\n(параметры поиска)
+App -> DB : SELECT рейсы\nи доступные места
+DB --> App : Список рейсов
+App --> UI : Страница с результатами
+
+== Переход к покупке ==
+User -> UI : Нажимает "Купить билет"
+UI -> App : GET /book/{trip_id}
+App -> DB : SELECT доступные места\nи цену для рейса
+DB --> App : Набор мест, цена
+App --> UI : Форма бронирования
+
+== Оформление билета ==
+User -> UI : Выбирает место,\nвводит ФИО
+UI -> App : POST /book/{trip_id}\n(данные пассажира, место)
+App -> DB : INSERT order
+App -> DB : INSERT ticket
+App -> DB : INSERT payment
+DB --> App : Подтверждение операций
+
+App --> UI : Страница об успешной покупке
+
+== Просмотр билетов ==
+User -> UI : Открывает /my_tickets
+UI -> App : GET /my_tickets
+App -> DB : SELECT tickets\nдля пользователя
+DB --> App : Список билетов
+App --> UI : Страница "Мои билеты"
+@enduml

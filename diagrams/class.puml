@@ -1,0 +1,98 @@
+@startuml
+title Диаграмма классов веб‑приложения\nпокупки ЖД билетов
+
+' ----- Пользователи -----
+class User {
+  - id : int
+  - full_name : string
+  - email : string
+  - password_hash : string
+  - role : string   ' guest/user/admin
+  + check_password(password : string) : bool
+}
+
+' ----- Справочники станций и поездов -----
+class Station {
+  - id : int
+  - name : string
+  - city : string
+}
+
+class Train {
+  - id : int
+  - number : string
+  - name : string
+  - type : string   ' скорый, фирменный и т.п.
+  + create_default_carriages()
+}
+
+class Carriage {
+  - id : int
+  - number : int
+  - type : string   ' плацкарт, купе, сидячий
+  - seat_count : int
+}
+
+class Seat {
+  - id : int
+  - number : int
+  - seat_class : string   ' класс обслуживания
+}
+
+' ----- Маршруты и рейсы -----
+class Route {
+  - id : int
+  - departure_time : time
+  - arrival_time : time
+  - base_price : decimal
+}
+
+class Trip {
+  - id : int
+  - departure_datetime : datetime
+  - arrival_datetime : datetime
+  - status : string   ' запланирован, отменён, выполнен
+  + get_available_seats() : List<Seat>
+}
+
+' ----- Заказы, билеты, платежи -----
+class Order {
+  - id : int
+  - order_date : datetime
+  - total_amount : decimal
+  - status : string   ' создан, оплачен, отменён
+  + add_ticket(t : Ticket)
+}
+
+class Ticket {
+  - id : int
+  - passenger_name : string
+  - price : decimal
+  - status : string   ' активен, возвращён
+}
+
+class Payment {
+  - id : int
+  - amount : decimal
+  - method : string   ' карта, наличные и т.п.
+  - status : string   ' проведён, отклонён
+  - paid_at : datetime
+}
+
+' ----- Ассоциации -----
+User "1" -- "0..*" Order : оформляет >
+Order "1" -- "1..*" Ticket : содержит >
+Order "1" -- "0..*" Payment : оплачивается >
+
+Ticket "1" --> "1" Trip : относится к >
+Ticket "1" --> "1" Seat : занимает >
+
+Train "1" -- "0..*" Carriage : состоит из >
+Carriage "1" -- "0..*" Seat : содержит >
+
+Train "1" -- "0..*" Route : обслуживает >
+Route "1" --> "1" Station : станция\nотправления
+Route "1" --> "1" Station : станция\nприбытия
+Route "1" -- "0..*" Trip : создаёт рейсы >
+
+@enduml
